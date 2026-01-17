@@ -1,63 +1,51 @@
-const { chromium } = require("playwright");
+const axios = require("axios");
 const cheerio = require("cheerio");
-const fs = require("fs");
-
-const START_URL = "https://connectvidhu.com";
-const MAX_PAGES = 10;
-
-function normalize(url) {
-  return url.replace(/\/$/, "");
-}
-
-async function crawlPage(page, url) {
-  await page.goto(url, { waitUntil: "networkidle" });
-
-  const html = await page.content();
-  const $ = cheerio.load(html);
-
-  return {
-    url,
-    title: $("title").text().trim(),
-    metaDescription: $('meta[name="description"]').attr("content") || "",
-    h1: $("h1").map((_, el) => $(el).text().trim()).get(),
-    h2: $("h2").map((_, el) => $(el).text().trim()).get(),
-    wordCount: $("body").text().split(/\s+/).length,
-    images: $("img").map((_, el) => ({
-      src: $(el).attr("src"),
-      alt: $(el).attr("alt") || ""
-    })).get(),
-    internalLinks: $("a[href^='/']").map((_, el) => $(el).attr("href")).get()
-  };
-}
+const { URL } = require("url");
 
 async function crawlSite(startUrl, maxPages = 5) {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-
   const visited = new Set();
-  const results = [];
   const queue = [startUrl];
+  const results = [];
+
+  const base = new URL(startUrl).origin;
 
   while (queue.length && results.length < maxPages) {
-    const currentUrl = normalize(queue.shift());
-    if (visited.has(currentUrl)) continue;
+    const url = queue.shift();
+    if (visited.has(url)) continue;
+    visited.add(url);
 
-    console.log(`🔍 Crawling: ${currentUrl}`);
-    visited.add(currentUrl);
+    try {
+      const { data: html } = await axios.get(url, { timeout: 10000 });
+      const $ = cheerio.load(html);
 
-    const data = await crawlPage(page, currentUrl);
-    results.push(data);
+      const page = {
+        url,
+        title: $("title").text() || "",
+        metaDescription: $('meta[name="description"]').attr("content") || "",
+        h1: $("h1").first().text() || "",
+        text: $("body").text().replace(/\s+/g, " ").trim(),
+      };
 
-    data.internalLinks.forEach(link => {
-      if (link.startsWith("/")) {
-        queue.push(new URL(link, startUrl).href);
-      }
-    });
+      results.push(page);
+
+      $("a[href]").each((_, el) => {
+        const href = $(el).attr("href");
+        if (!href) return;
+
+        try {
+          const next = new URL(href, base).href;
+          if (next.startsWith(base) && !visited.has(next)) {
+            queue.push(next);
+          }
+        } catch {}
+      });
+
+    } catch (err) {
+      console.error("Crawl failed:", url, err.message);
+    }
   }
 
-  await browser.close();
   return results;
 }
 
 module.exports = crawlSite;
-
