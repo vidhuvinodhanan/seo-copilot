@@ -1,37 +1,54 @@
 function analyzePage(page) {
+  // HARD SAFETY GUARDS (critical)
+  if (!page || typeof page !== "object") {
+    return {
+      url: "unknown",
+      score: 0,
+      issues: ["Invalid page data"]
+    };
+  }
+
   const issues = [];
 
+  // SAFE NORMALIZATION
+  const title = page.title || "";
+  const metaDescription = page.metaDescription || "";
+  const h1 = page.h1 || [];
+  const wordCount = page.wordCount || 0;
+  const images = page.images || [];
+  const internalLinks = page.internalLinks || [];
+
   // Title
-  if (!page.title || page.title.length < 30 || page.title.length > 60) {
+  if (title.length < 30 || title.length > 60) {
     issues.push("Title should be 30–60 characters");
   }
 
   // Meta description
-  if (!page.metaDescription || page.metaDescription.length < 120) {
+  if (metaDescription.length < 120) {
     issues.push("Meta description is missing or too short");
   }
 
   // H1
-  if (!page.h1 || page.h1.length === 0) {
+  if (h1.length === 0) {
     issues.push("Missing H1 tag");
   }
-  if (page.h1 && page.h1.length > 1) {
+  if (h1.length > 1) {
     issues.push("Multiple H1 tags detected");
   }
 
   // Content depth
-  if (page.wordCount < 600) {
+  if (wordCount < 600) {
     issues.push("Thin content (less than 600 words)");
   }
 
   // Images alt text
-  const missingAlt = page.images.filter(img => !img.alt).length;
+  const missingAlt = images.filter(img => !img.alt).length;
   if (missingAlt > 0) {
     issues.push(`${missingAlt} images missing alt text`);
   }
 
   // Internal links
-  if (page.internalLinks.length < 3) {
+  if (internalLinks.length < 3) {
     issues.push("Too few internal links");
   }
 
