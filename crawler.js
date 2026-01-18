@@ -9,8 +9,15 @@ async function crawlSite(startUrl, maxPages = 5) {
 
   const base = new URL(startUrl).origin;
 
+  // 🔁 Normalize URLs (remove trailing slash except root)
+  function normalize(url) {
+    return url.endsWith("/") && url.length > base.length
+      ? url.slice(0, -1)
+      : url;
+  }
+
   while (queue.length && results.length < maxPages) {
-    const currentUrl = queue.shift();
+    const currentUrl = normalize(queue.shift());
     if (visited.has(currentUrl)) continue;
     visited.add(currentUrl);
 
@@ -39,7 +46,9 @@ async function crawlSite(startUrl, maxPages = 5) {
         internalLinks: $("a[href]")
           .map((_, el) => {
             try {
-              return new URL($(el).attr("href"), base).href;
+              const href = $(el).attr("href");
+              const absolute = new URL(href, base).href;
+              return normalize(absolute.split("#")[0]); // 🔥 HASH + SLASH CLEAN
             } catch {
               return null;
             }
@@ -50,10 +59,10 @@ async function crawlSite(startUrl, maxPages = 5) {
 
       results.push(page);
 
+      // ✅ Queue deduplicated URLs only
       page.internalLinks.forEach(link => {
-  if (!visited.has(link)) queue.push(link);
-});
-
+        if (!visited.has(link)) queue.push(link);
+      });
 
     } catch (err) {
       console.error("Crawl failed:", currentUrl, err.message);
