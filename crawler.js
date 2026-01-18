@@ -51,8 +51,9 @@ async function crawlSite(startUrl, maxPages = 5) {
       results.push(page);
 
       page.internalLinks.forEach(link => {
-        if (!visited.has(link)) queue.push(link);
-      });
+  if (!visited.has(link)) queue.push(link);
+});
+
 
     } catch (err) {
       console.error("Crawl failed:", currentUrl, err.message);
