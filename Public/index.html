@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SEO Copilot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <h1>SEO Copilot</h1>
+    <p>Instant technical & on-page SEO analysis</p>
+  </header>
+
+  <!-- INPUT SECTION -->
+  <section class="input-section">
+    <input
+      id="urlInput"
+      type="text"
+      placeholder="https://example.com"
+    />
+    <button id="analyzeBtn">Analyze Website</button>
+  </section>
+
+  <!-- LOADING STATE -->
+  <section id="loading" class="loading hidden">
+    <p>🔍 Crawling and analyzing website…</p>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="results hidden">
+
+    <!-- OVERALL SCORE -->
+    <div class="overall-score">
+      <h2>Overall SEO Score</h2>
+      <p id="overallScore">—</p>
+    </div>
+
+    <!-- PAGE REPORTS -->
+    <div id="pagesContainer" class="pages-container">
+      <!-- Pages will be injected here -->
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>SEO Copilot MVP • Built by Vidhu</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
