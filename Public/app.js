@@ -40,6 +40,26 @@ function groupIssues(issues) {
 }
 
 // ===============================
+// 🚨 Helper: aggregate top priority fixes
+// ===============================
+function getTopPriorityFixes(audits) {
+  const issueCount = {};
+
+  audits.forEach(audit => {
+    audit.issues.forEach(issue => {
+      const severity = classifyIssue(issue);
+      if (severity === "critical" || severity === "important") {
+        issueCount[issue] = (issueCount[issue] || 0) + 1;
+      }
+    });
+  });
+
+  return Object.entries(issueCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+}
+
+// ===============================
 // Existing App Logic
 // ===============================
 const analyzeBtn = document.getElementById("analyzeBtn");
@@ -60,6 +80,11 @@ analyzeBtn.addEventListener("click", async () => {
   // Reset UI
   results.classList.add("hidden");
   pagesContainer.innerHTML = "";
+
+  // ✅ FIX: remove old Top Priority Fixes box
+  const oldPriority = results.querySelector(".priority-fixes");
+  if (oldPriority) oldPriority.remove();
+
   loading.classList.remove("hidden");
 
   try {
@@ -71,6 +96,17 @@ analyzeBtn.addEventListener("click", async () => {
 
     const data = await response.json();
 
+    // 🔁 Deduplicate pages by URL (frontend-safe)
+    const seen = new Set();
+
+    data.audits = data.audits.filter(audit => {
+      if (seen.has(audit.url)) return false;
+      seen.add(audit.url);
+      return true;
+    });
+
+    data.prompts = data.prompts.filter(p => seen.has(p.url));
+
     loading.classList.add("hidden");
     results.classList.remove("hidden");
 
@@ -81,6 +117,24 @@ analyzeBtn.addEventListener("click", async () => {
     );
 
     overallScoreEl.textContent = `${avgScore} / 100`;
+
+    // 🚨 Render Top Priority Fixes
+    const topFixes = getTopPriorityFixes(data.audits);
+
+    const priorityBox = document.createElement("div");
+    priorityBox.className = "priority-fixes";
+
+    priorityBox.innerHTML = `
+      <h2>🚨 Top Priority Fixes</h2>
+      <ul>
+        ${topFixes.map(
+          ([issue, count]) =>
+            `<li><strong>${issue}</strong> (affects ${count} page${count > 1 ? "s" : ""})</li>`
+        ).join("")}
+      </ul>
+    `;
+
+    results.prepend(priorityBox);
 
     // Render each page report
     data.audits.forEach((audit, index) => {

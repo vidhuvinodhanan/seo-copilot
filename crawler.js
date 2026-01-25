@@ -1,8 +1,8 @@
-const axios = require("axios");
-const cheerio = require("cheerio");
-const { URL } = require("url");
+import axios from "axios";
+import * as cheerio from "cheerio";
+import { URL } from "url";
 
-async function crawlSite(startUrl, maxPages = 5) {
+export default async function crawlSite(startUrl, maxPages = 5) {
   const visited = new Set();
   const queue = [startUrl];
   const results = [];
@@ -71,5 +71,3 @@ async function crawlSite(startUrl, maxPages = 5) {
 
   return results;
 }
-
-module.exports = crawlSite;

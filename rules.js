@@ -1,4 +1,4 @@
-function analyzePage(page) {
+export default function analyzePage(page) {
   const issues = [];
 
   const title = page.title || "";
@@ -45,5 +45,3 @@ function analyzePage(page) {
     issues
   };
 }
-
-module.exports = analyzePage;
