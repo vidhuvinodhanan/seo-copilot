@@ -27,3 +27,23 @@ button {
   margin-top: 20px;
   padding-top: 10px;
 }
+
+/* ===============================
+   UX upgrade: priority fix impact
+   =============================== */
+.issue-impact {
+  margin-top: 4px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+/* ===============================
+   MVP polish: per-page priority fix
+   =============================== */
+.priority-fix {
+  background: #fff7e6;
+  border-left: 4px solid #f0ad4e;
+  padding: 8px 10px;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
